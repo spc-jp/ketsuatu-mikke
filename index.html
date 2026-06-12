@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>血圧みっけ - 健診結果をわかりやすく解説</title>
+  <style>
+    :root {
+      --primary:       #1565C0;
+      --primary-mid:   #0288D1;
+      --primary-light: #E3F2FD;
+      --accent:        #26C6DA;
+      --text:          #1a1a2e;
+      --muted:         #546e7a;
+      --bg:            #f8fafc;
+      --white:         #ffffff;
+      --radius:        16px;
+      --shadow:        0 4px 20px rgba(21,101,192,.12);
+    }
+
+    * { margin:0; padding:0; box-sizing:border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans',
+                   'Hiragino Kaku Gothic ProN', 'Yu Gothic', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      max-width: 480px;
+      margin: 0 auto;
+      min-height: 100vh;
+    }
+
+    /* ── Screen toggle ── */
+    .screen { display:none; min-height:100vh; }
+    .screen.active { display:block; }
+
+    /* ─────────────────────────────────────
+       SHARED COMPONENTS
+    ───────────────────────────────────── */
+    .hero-gradient {
+      background: linear-gradient(150deg, #0D47A1 0%, #1565C0 35%, #0288D1 70%, #26C6DA 100%);
+    }
+
+    .back-btn {
+      background: rgba(255,255,255,.2);
+      border: none;
+      color: #fff;
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 18px;
+      display: flex; align-items:center; justify-content:center;
+      flex-shrink: 0;
+    }
+
+    /* ─────────────────────────────────────
+       TOP PAGE
+    ───────────────────────────────────── */
+    .hero {
+      padding: 36px 24px 52px;
+      text-align: center;
+    }
+
+    .app-header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .app-icon {
+      width: 46px; height: 46px;
+      background: #fff;
+      border-radius: 12px;
+      display: flex; align-items:center; justify-content:center;
+      font-size: 24px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.15);
+    }
+
+    .app-title-group h1 { color:#fff; font-size:19px; font-weight:800; text-align:left; }
+    .app-title-group p  { color:rgba(255,255,255,.8); font-size:12px; text-align:left; }
+
+    .badge {
+      display: inline-flex; align-items:center; gap:6px;
+      background: rgba(255,255,255,.18);
+      border: 1px solid rgba(255,255,255,.4);
+      color: #fff;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 22px;
+    }
+
+    .hero-title {
+      color: #fff;
+      font-size: 28px;
+      font-weight: 900;
+      line-height: 1.4;
+      margin-bottom: 14px;
+      letter-spacing: -.3px;
+    }
+
+    .hero-sub {
+      color: rgba(255,255,255,.88);
+      font-size: 15px;
+      line-height: 1.7;
+      margin-bottom: 28px;
+    }
+
+    .btn-cta {
+      display: block;
+      width: 100%;
+      background: #fff;
+      color: var(--primary);
+      font-size: 17px;
+      font-weight: 800;
+      padding: 17px 24px;
+      border-radius: 50px;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 6px 20px rgba(0,0,0,.2);
+      transition: transform .15s;
+    }
+    .btn-cta:active { transform: scale(.97); }
+
+    .disclaimer {
+      color: rgba(255,255,255,.6);
+      font-size: 11px;
+      margin-top: 12px;
+    }
+
+    /* Steps */
+    .section { padding: 40px 24px; }
+    .section-title {
+      text-align: center;
+      font-size: 18px;
+      font-weight: 800;
+      margin-bottom: 24px;
+    }
+
+    .steps { display:flex; flex-direction:column; gap:14px; }
+
+    .step {
+      display: flex; align-items:flex-start; gap:16px;
+      background: var(--white);
+      padding: 16px 18px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .step-num {
+      width: 32px; height:32px;
+      background: linear-gradient(135deg,#1565C0,#0288D1);
+      color: #fff;
+      border-radius: 50%;
+      display: flex; align-items:center; justify-content:center;
+      font-weight: 800; font-size:14px;
+      flex-shrink: 0;
+    }
+
+    .step h3 { font-size:15px; font-weight:700; margin-bottom:3px; }
+    .step p  { font-size:13px; color:var(--muted); }
+
+    /* Feature grid */
+    .features-section {
+      background: var(--primary-light);
+      padding: 40px 24px;
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .feature-card {
+      background: var(--white);
+      padding: 20px 14px;
+      border-radius: var(--radius);
+      text-align: center;
+      box-shadow: var(--shadow);
+    }
+
+    .feature-card .fi { font-size:28px; margin-bottom:8px; }
+    .feature-card h3  { font-size:13px; font-weight:700; margin-bottom:4px; }
+    .feature-card p   { font-size:11px; color:var(--muted); }
+
+    /* Footer link */
+    .series-footer {
+      padding: 20px 24px 40px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    /* ─────────────────────────────────────
+       INPUT SCREEN
+    ───────────────────────────────────── */
+    .input-header {
+      padding: 18px 20px;
+      display: flex; align-items:center; gap:12px;
+    }
+
+    .input-header h2 { color:#fff; font-size:17px; font-weight:700; }
+
+    .form-body { padding: 24px; }
+
+    .fsec { margin-bottom:28px; }
+
+    .fsec-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--muted);
+      letter-spacing: .4px;
+      margin-bottom: 14px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid var(--primary-light);
+      display: flex; align-items:center; gap:8px;
+    }
+
+    .tag-req { background:#EF5350; color:#fff; font-size:10px; padding:2px 6px; border-radius:4px; font-weight:700; }
+    .tag-opt { background:#90A4AE; color:#fff; font-size:10px; padding:2px 6px; border-radius:4px; font-weight:700; }
+
+    .bp-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .fg { margin-bottom: 14px; }
+    .fg label { display:block; font-size:14px; font-weight:600; margin-bottom:7px; }
+
+    .num-input {
+      width: 100%;
+      padding: 14px 12px;
+      border: 2px solid #e0e0e0;
+      border-radius: 12px;
+      font-size: 26px;
+      font-weight: 800;
+      text-align: center;
+      color: var(--text);
+      background: #fff;
+      transition: border-color .2s;
+    }
+    .num-input:focus { outline:none; border-color:var(--primary); }
+    .num-unit { font-size:11px; color:var(--muted); text-align:center; margin-top:4px; }
+
+    .sel {
+      width: 100%;
+      padding: 13px 40px 13px 14px;
+      border: 2px solid #e0e0e0;
+      border-radius: 12px;
+      font-size: 15px;
+      color: var(--text);
+      background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23546e7a' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 14px center;
+      -webkit-appearance: none; appearance: none;
+    }
+    .sel:focus { outline:none; border-color:var(--primary); }
+
+    .gender-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+
+    .gender-btn {
+      padding: 13px;
+      border: 2px solid #e0e0e0;
+      border-radius: 12px;
+      font-size: 15px; font-weight:600;
+      background: #fff;
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .gender-btn.sel-on {
+      border-color: var(--primary);
+      background: var(--primary-light);
+      color: var(--primary);
+    }
+
+    /* Optional accordion */
+    .opt-wrap {
+      background: #f1f6fb;
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 24px;
+    }
+
+    .opt-trigger {
+      display: flex; align-items:center; justify-content:space-between;
+      cursor: pointer;
+      font-size: 14px; font-weight:600;
+      gap: 8px;
+    }
+
+    .opt-arrow { font-size:14px; color:var(--muted); transition:transform .3s; flex-shrink:0; }
+    .opt-trigger.open .opt-arrow { transform:rotate(180deg); }
+
+    .opt-body { display:none; margin-top:16px; }
+    .opt-body.open { display:block; }
+
+    .btn-submit {
+      display: block; width: 100%;
+      background: linear-gradient(135deg, #1565C0 0%, #0288D1 100%);
+      color: #fff;
+      font-size: 18px; font-weight:800;
+      padding: 18px;
+      border-radius: 50px;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 6px 20px rgba(21,101,192,.35);
+      margin-bottom: 14px;
+    }
+
+    .privacy-note {
+      text-align:center; font-size:11px; color:var(--muted);
+    }
+
+    /* ─────────────────────────────────────
+       RESULT SCREEN
+    ───────────────────────────────────── */
+    .result-header {
+      padding: 20px 20px 48px;
+    }
+
+    .result-header-row {
+      display: flex; align-items:center;
+    }
+
+    .result-header h2 {
+      color:#fff; font-size:17px; font-weight:700;
+      flex:1; text-align:center;
+      margin-right:36px; /* balance back btn */
+    }
+
+    .result-body { padding: 0 20px; margin-top: -28px; }
+
+    /* Main card */
+    .main-card {
+      background: var(--white);
+      border-radius: 20px;
+      padding: 24px 20px 20px;
+      box-shadow: 0 8px 30px rgba(21,101,192,.18);
+      margin-bottom: 14px;
+    }
+
+    .bp-row-disp {
+      display: flex; align-items:center; justify-content:center; gap:10px;
+      margin-bottom: 14px;
+    }
+
+    .bp-val { text-align:center; }
+    .bp-val .num { font-size: 52px; font-weight:900; line-height:1; }
+    .bp-val .lbl { font-size:11px; color:var(--muted); margin-top:4px; }
+    .bp-sep { font-size:32px; color:#ccc; font-weight:200; }
+
+    .status-pill {
+      display: inline-block;
+      padding: 7px 22px;
+      border-radius: 20px;
+      font-size: 15px; font-weight:800;
+    }
+
+    .s-normal  { background:#E8F5E9; color:#2E7D32; }
+    .s-elev    { background:#FFF8E1; color:#F57F17; }
+    .s-h1      { background:#FFF3E0; color:#E65100; }
+    .s-h2      { background:#FCE4EC; color:#C62828; }
+
+    /* Gauge */
+    .gauge { margin: 16px 0 14px; }
+    .gauge-track {
+      height: 8px; border-radius:4px;
+      background: linear-gradient(to right, #4CAF50 0%, #8BC34A 25%, #FFC107 45%, #FF9800 65%, #F44336 85%, #B71C1C 100%);
+      position: relative;
+    }
+    .gauge-dot {
+      position:absolute; top:-5px;
+      width:18px; height:18px;
+      background:#fff; border:3px solid #333;
+      border-radius:50%; transform:translateX(-50%);
+      transition: left .6s cubic-bezier(.34,1.56,.64,1);
+    }
+    .gauge-labels {
+      display:flex; justify-content:space-between; margin-top:6px;
+    }
+    .gauge-labels span { font-size:10px; color:var(--muted); }
+
+    .result-desc {
+      font-size: 14px;
+      line-height: 1.75;
+      color: var(--text);
+      margin-top: 14px;
+    }
+
+    /* Advice cards */
+    .advice-section { padding: 4px 20px 20px; }
+    .advice-section-title {
+      font-size:17px; font-weight:800;
+      text-align:center;
+      padding: 10px 0 18px;
+    }
+
+    .adv-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 18px 18px 12px;
+      margin-bottom: 12px;
+      box-shadow: var(--shadow);
+    }
+
+    .adv-head {
+      display:flex; align-items:center; gap:10px;
+      margin-bottom: 12px;
+    }
+
+    .adv-head .ic { font-size:22px; }
+    .adv-head h3  { font-size:15px; font-weight:800; }
+
+    .adv-list { list-style:none; }
+    .adv-list li {
+      padding: 8px 0;
+      border-bottom: 1px solid #f0f4f8;
+      font-size: 13px;
+      display:flex; gap:8px; align-items:flex-start;
+    }
+    .adv-list li:last-child { border-bottom:none; }
+    .adv-list li::before {
+      content:"✓"; color:var(--primary);
+      font-weight:800; flex-shrink:0; margin-top:1px;
+    }
+
+    .pri-tag {
+      background:#FFF3E0; border:1px solid #FFB300;
+      color:#E65100; font-size:10px;
+      padding:2px 7px; border-radius:8px; font-weight:700;
+      white-space: nowrap;
+    }
+
+    /* Retry */
+    .retry-wrap { padding: 4px 20px 16px; }
+    .btn-retry {
+      display:block; width:100%;
+      background:transparent;
+      border: 2px solid var(--primary);
+      color: var(--primary);
+      font-size:15px; font-weight:700;
+      padding: 14px;
+      border-radius: 50px;
+      cursor: pointer;
+    }
+
+    .foot-note {
+      text-align:center; font-size:11px; color:var(--muted);
+      padding: 8px 20px 40px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════
+     SCREEN 1 ： TOP PAGE
+════════════════════════════════════ -->
+<div id="s-top" class="screen active">
+
+  <div class="hero hero-gradient">
+    <div class="app-header">
+      <div class="app-icon">💙</div>
+      <div class="app-title-group">
+        <h1>血圧みっけ</h1>
+        <p>健診結果をわかりやすく解説</p>
+      </div>
+    </div>
+
+    <div class="badge">✓ 登録不要・無料・30秒で完了</div>
+
+    <h2 class="hero-title">健診で血圧が高めと<br>言われたあなたへ</h2>
+
+    <p class="hero-sub">
+      数値を入力するだけで、今の状態と<br>
+      改善ポイントをわかりやすく教えます。
+    </p>
+
+    <button class="btn-cta" onclick="go('s-input')">
+      💗 今すぐ数値を入れてみる
+    </button>
+
+    <p class="disclaimer">医療診断ではなく、生活改善の参考情報です</p>
+  </div>
+
+  <!-- Steps -->
+  <div class="section">
+    <h2 class="section-title">使い方は3ステップ</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div>
+          <h3>健診結果の数値を入力</h3>
+          <p>上の血圧・下の血圧・年齢・性別を入力。手元に結果票を用意してください。</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div>
+          <h3>今の状態が一目でわかる</h3>
+          <p>「正常・正常高値・高値血圧・高血圧」の4段階で、あなたの位置を表示します。</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div>
+          <h3>改善ポイントを確認</h3>
+          <p>食事・運動・ストレス管理ごとに、優先順位つきのアドバイスを受け取れます。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Features -->
+  <div class="features-section">
+    <h2 class="section-title">このアプリの特徴</h2>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <div class="fi">📊</div>
+        <h3>数値を即解説</h3>
+        <p>「130/85って何？」を秒で解消</p>
+      </div>
+      <div class="feature-card">
+        <div class="fi">💡</div>
+        <h3>具体的なアドバイス</h3>
+        <p>「とりあえず減塩」じゃない、あなた向けの提案</p>
+      </div>
+      <div class="feature-card">
+        <div class="fi">🔒</div>
+        <h3>完全ローカル処理</h3>
+        <p>入力データはサーバーに送信されません</p>
+      </div>
+      <div class="feature-card">
+        <div class="fi">📱</div>
+        <h3>アプリ不要</h3>
+        <p>ブラウザだけで使える。インストール不要</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="series-footer">
+    血糖値みっけ・ダイエットみっけと連携した<br>健診サポートシリーズ 第3弾
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════
+     SCREEN 2 ： INPUT
+════════════════════════════════════ -->
+<div id="s-input" class="screen">
+
+  <div class="input-header hero-gradient">
+    <button class="back-btn" onclick="go('s-top')">←</button>
+    <h2>血圧の数値を入力</h2>
+  </div>
+
+  <div class="form-body">
+
+    <!-- 血圧 -->
+    <div class="fsec">
+      <div class="fsec-title">血圧の数値 <span class="tag-req">必須</span></div>
+      <div class="bp-row">
+        <div class="fg">
+          <label>上の血圧</label>
+          <input type="number" id="sys" class="num-input" placeholder="130" min="60" max="250" inputmode="numeric">
+          <div class="num-unit">収縮期（mmHg）</div>
+        </div>
+        <div class="fg">
+          <label>下の血圧</label>
+          <input type="number" id="dia" class="num-input" placeholder="85" min="40" max="150" inputmode="numeric">
+          <div class="num-unit">拡張期（mmHg）</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 基本情報 -->
+    <div class="fsec">
+      <div class="fsec-title">基本情報 <span class="tag-req">必須</span></div>
+
+      <div class="fg">
+        <label>年齢</label>
+        <select id="age" class="sel">
+          <option value="">選択してください</option>
+          <option value="30代">30代</option>
+          <option value="40代">40代</option>
+          <option value="50代">50代</option>
+          <option value="60代">60代</option>
+          <option value="70代以上">70代以上</option>
+        </select>
+      </div>
+
+      <div class="fg">
+        <label>性別</label>
+        <div class="gender-row">
+          <button class="gender-btn" id="g-m" onclick="pickGender('男性')">👨 男性</button>
+          <button class="gender-btn" id="g-f" onclick="pickGender('女性')">👩 女性</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 生活習慣（任意） -->
+    <div class="opt-wrap">
+      <div class="opt-trigger" id="opt-trig" onclick="toggleOpt()">
+        <span>🔍 生活習慣を入力するとより詳しいアドバイスが届きます <span class="tag-opt">任意</span></span>
+        <span class="opt-arrow">▼</span>
+      </div>
+      <div class="opt-body" id="opt-body">
+
+        <div class="fg" style="margin-top:14px">
+          <label>塩分の摂り方</label>
+          <select id="salt" class="sel">
+            <option value="">選択してください</option>
+            <option value="多い">多い（濃い味が好き・外食多め）</option>
+            <option value="普通">普通</option>
+            <option value="少ない">少ない（薄味を意識している）</option>
+          </select>
+        </div>
+
+        <div class="fg">
+          <label>運動習慣</label>
+          <select id="exercise" class="sel">
+            <option value="">選択してください</option>
+            <option value="ほぼしない">ほぼしない（週0〜1回）</option>
+            <option value="たまにする">たまにする（週2〜3回）</option>
+            <option value="よくする">よくする（週4回以上）</option>
+          </select>
+        </div>
+
+        <div class="fg">
+          <label>ストレスの感じ方</label>
+          <select id="stress" class="sel">
+            <option value="">選択してください</option>
+            <option value="強い">強い（かなりストレスを感じている）</option>
+            <option value="普通">普通</option>
+            <option value="少ない">少ない（比較的リラックスできている）</option>
+          </select>
+        </div>
+
+        <div class="fg">
+          <label>家族に高血圧の方は？</label>
+          <select id="family" class="sel">
+            <option value="">選択してください</option>
+            <option value="いる">いる（親・兄弟など）</option>
+            <option value="いない">いない</option>
+            <option value="わからない">わからない</option>
+          </select>
+        </div>
+
+        <div class="fg">
+          <label>お酒の量</label>
+          <select id="alcohol" class="sel">
+            <option value="">選択してください</option>
+            <option value="飲まない">飲まない・ほとんど飲まない</option>
+            <option value="適量">適量（ビール中瓶1本程度/日）</option>
+            <option value="多い">多い（それ以上）</option>
+          </select>
+        </div>
+
+      </div>
+    </div>
+
+    <button class="btn-submit" onclick="calcResult()">
+      結果を見る →
+    </button>
+    <p class="privacy-note">入力した数値はサーバーに送信・保存されません</p>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════
+     SCREEN 3 ： RESULT
+════════════════════════════════════ -->
+<div id="s-result" class="screen">
+
+  <div class="result-header hero-gradient">
+    <div class="result-header-row">
+      <button class="back-btn" onclick="go('s-input')">←</button>
+      <h2>あなたの結果</h2>
+    </div>
+  </div>
+
+  <div class="result-body">
+    <div class="main-card">
+
+      <div class="bp-row-disp">
+        <div class="bp-val">
+          <div class="num" id="r-sys" style="color:var(--primary)">—</div>
+          <div class="lbl">上の血圧</div>
+        </div>
+        <div class="bp-sep">/</div>
+        <div class="bp-val">
+          <div class="num" id="r-dia" style="color:var(--primary-mid)">—</div>
+          <div class="lbl">下の血圧</div>
+        </div>
+      </div>
+
+      <div style="text-align:center">
+        <span class="status-pill" id="status-pill">—</span>
+      </div>
+
+      <div class="gauge">
+        <div class="gauge-track">
+          <div class="gauge-dot" id="gauge-dot" style="left:8%"></div>
+        </div>
+        <div class="gauge-labels">
+          <span>正常</span>
+          <span>正常高値</span>
+          <span>高値</span>
+          <span>高血圧</span>
+        </div>
+      </div>
+
+      <p class="result-desc" id="r-desc">—</p>
+    </div>
+  </div>
+
+  <div class="advice-section" id="advice-section">
+    <!-- JS で生成 -->
+  </div>
+
+  <div class="retry-wrap">
+    <button class="btn-retry" onclick="go('s-input')">← 数値を入れ直す</button>
+  </div>
+
+  <p class="foot-note">
+    ※このアプリは医療診断ではありません。治療が必要かどうかは必ず医師にご相談ください。
+  </p>
+</div>
+
+
+<!-- ════════════════════════════════════
+     JAVASCRIPT
+════════════════════════════════════ -->
+<script>
+// ── Navigation ──────────────────────
+function go(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+// ── Gender ──────────────────────────
+let gender = '';
+function pickGender(g) {
+  gender = g;
+  document.getElementById('g-m').classList.toggle('sel-on', g === '男性');
+  document.getElementById('g-f').classList.toggle('sel-on', g === '女性');
+}
+
+// ── Optional accordion ──────────────
+function toggleOpt() {
+  document.getElementById('opt-trig').classList.toggle('open');
+  document.getElementById('opt-body').classList.toggle('open');
+}
+
+// ── BP Classification ───────────────
+// Based on 日本高血圧学会ガイドライン2019
+function classify(s, d) {
+  if (s <  120 && d <  80) return { lv:0, label:'正常血圧',    cls:'s-normal', pos: 7  };
+  if (s <= 129 && d <  80) return { lv:1, label:'正常高値血圧', cls:'s-normal', pos: 22 };
+  if (s <= 139 || d <= 89) return { lv:2, label:'高値血圧',    cls:'s-elev',   pos: 40 };
+  if (s <= 159 || d <= 99) return { lv:3, label:'I度高血圧',   cls:'s-h1',     pos: 60 };
+  if (s <= 179 || d <=109) return { lv:4, label:'II度高血圧',  cls:'s-h1',     pos: 77 };
+  return                         { lv:5, label:'III度高血圧', cls:'s-h2',     pos: 92 };
+}
+
+// ── Description ─────────────────────
+function makeDesc(bp, s, d, age, gen) {
+  const ageSuffix = (age === '60代' || age === '70代以上')
+    ? ' 年齢とともに血圧は上がりやすくなりますが、生活習慣の見直しで十分に改善できます。'
+    : '';
+  const genSuffix = gen === '女性'
+    ? ' 女性は更年期以降に血圧が上がりやすくなる傾向があります。'
+    : '';
+
+  const msgs = [
+    `上の血圧 <strong>${s}</strong>・下の血圧 <strong>${d}</strong> は<strong>正常な範囲</strong>です。この調子で良い生活習慣を続けましょう！${ageSuffix}`,
+    `上の血圧 <strong>${s}</strong>・下の血圧 <strong>${d}</strong> は<strong>正常ですが、やや高め</strong>（正常高値）の範囲です。今のうちから食事・運動を意識しておくと安心です。${ageSuffix}${genSuffix}`,
+    `上の血圧 <strong>${s}</strong>・下の血圧 <strong>${d}</strong> は<strong>「高値血圧」</strong>の範囲です。すぐに受診が必要というわけではありませんが、食事・運動・ストレスを見直すことで改善できる段階です。焦らず、できることから始めましょう。${ageSuffix}${genSuffix}`,
+    `上の血圧 <strong>${s}</strong>・下の血圧 <strong>${d}</strong> は<strong>「I度高血圧」</strong>の範囲です。生活習慣の改善が最も大切な時期です。まずは食事と運動から取り組み、3ヶ月後に再測定してみましょう。かかりつけ医への相談もおすすめです。${ageSuffix}${genSuffix}`,
+    `上の血圧 <strong>${s}</strong>・下の血圧 <strong>${d}</strong> は<strong>「II度高血圧」</strong>の範囲です。生活習慣の改善と並行して、早めに医療機関への受診をおすすめします。${ageSuffix}${genSuffix}`,
+    `上の血圧 <strong>${s}</strong>・下の血圧 <strong>${d}</strong> は<strong>「III度高血圧」</strong>の範囲です。できるだけ早めに医療機関を受診してください。${ageSuffix}${genSuffix}`,
+  ];
+  return msgs[Math.min(bp.lv, 5)];
+}
+
+// ── Advice ──────────────────────────
+function makeAdvice(lv, salt, exercise, stress, family, alcohol) {
+
+  // 食事
+  const dietItems = [];
+  if (!salt || salt === '多い') {
+    dietItems.push(['優先', '塩分を1日6g未満に。味噌汁を1日1杯にするだけで大きく変わります']);
+    dietItems.push([null,   '醤油・ソースは「かける」→「つける」に変えるだけで塩分半減']);
+  } else if (salt === '普通') {
+    dietItems.push(['優先', '引き続き塩分6g/日未満を意識しましょう。汁物の回数に注目を']);
+    dietItems.push([null,   '出汁を効かせると薄味でも満足感が出やすくなります']);
+  } else {
+    dietItems.push([null, '塩分管理はできています！次は食べる内容をさらに充実させましょう']);
+  }
+  dietItems.push([null, 'カリウムが豊富な野菜（ほうれん草・アボカド・バナナ）を積極的に摂る']);
+  dietItems.push([null, '加工食品（ちくわ・かまぼこ・インスタント麺）は週2回以内に']);
+  if (lv >= 3) {
+    dietItems.push([null, 'DASH食（野菜・果物・低脂肪乳製品を中心とした食事）が効果的です']);
+  }
+
+  // 運動
+  const exItems = [];
+  if (!exercise || exercise === 'ほぼしない') {
+    exItems.push(['優先', '1日10分のウォーキングから始めましょう。有酸素運動が血圧改善に最も効果的']);
+    exItems.push([null,   'エレベーターの代わりに階段を使うだけでも積み重ねで変わります']);
+  } else if (exercise === 'たまにする') {
+    exItems.push([null, '今の習慣を週4〜5回に増やすと理想的です']);
+    exItems.push([null, '1回30分のウォーキングを週5日続けると収縮期血圧が平均4〜9mmHg下がります']);
+  } else {
+    exItems.push([null, '継続できているのは素晴らしいです！強度より継続を優先しましょう']);
+  }
+  exItems.push([null, 'スクワットなどの筋トレを組み合わせるとさらに効果的']);
+  exItems.push([null, '運動前後の血圧急上昇を防ぐため、準備運動をしっかり行いましょう']);
+
+  // ストレス・生活リズム
+  const strItems = [];
+  if (!stress || stress === '強い') {
+    strItems.push(['優先', 'ストレスは血圧を一時的に20〜30mmHg上昇させます。1日5分の深呼吸から始めましょう']);
+    strItems.push([null,   '入浴は40℃・15分がリラックスと血圧改善の両立に最適']);
+  } else {
+    strItems.push([null, '良質な睡眠（7〜8時間）は血圧管理に直結します。就寝1時間前のスマホは控えめに']);
+  }
+  strItems.push([null, '冬の脱衣所・トイレは血圧が急上昇しやすい場所です。寒暖差に注意を']);
+  if (alcohol === '多い') {
+    strItems.push(['優先', 'お酒の量を減らすことで血圧が下がりやすくなります。週2日の休肝日を目標に']);
+  }
+  if (family === 'いる') {
+    strItems.push([null, '家族歴があっても生活習慣の改善で十分コントロールできます。定期的な測定を続けましょう']);
+  }
+
+  const cards = [
+    { ic: '🥗', title: '食事の改善',          items: dietItems },
+    { ic: '🚶', title: '運動の改善',          items: exItems   },
+    { ic: '😌', title: 'ストレス・生活リズム', items: strItems  },
+  ];
+
+  if (lv >= 3) {
+    cards.push({
+      ic: '🏥',
+      title: 'かかりつけ医への相談',
+      items: [
+        [null, '家庭での血圧測定を習慣に。朝起きてすぐと就寝前の2回がおすすめ'],
+        [null, '3〜6ヶ月生活習慣を改善しても効果が出ない場合、薬物療法を検討することもあります'],
+        [null, '健診結果の紙を持参すると診察がスムーズです'],
+      ]
+    });
+  }
+
+  return cards;
+}
+
+// ── Main calc ───────────────────────
+function calcResult() {
+  const s = parseInt(document.getElementById('sys').value);
+  const d = parseInt(document.getElementById('dia').value);
+  const age  = document.getElementById('age').value;
+  const salt     = document.getElementById('salt').value;
+  const exercise = document.getElementById('exercise').value;
+  const stress   = document.getElementById('stress').value;
+  const family   = document.getElementById('family').value;
+  const alcohol  = document.getElementById('alcohol').value;
+
+  // Validation
+  if (isNaN(s) || s < 60 || s > 250) {
+    alert('上の血圧（収縮期）を正しく入力してください（60〜250）'); return;
+  }
+  if (isNaN(d) || d < 40 || d > 150) {
+    alert('下の血圧（拡張期）を正しく入力してください（40〜150）'); return;
+  }
+  if (!age)    { alert('年齢を選択してください'); return; }
+  if (!gender) { alert('性別を選択してください'); return; }
+
+  const bp = classify(s, d);
+
+  // Fill result values
+  document.getElementById('r-sys').textContent = s;
+  document.getElementById('r-dia').textContent = d;
+
+  const pill = document.getElementById('status-pill');
+  pill.textContent = bp.label;
+  pill.className   = 'status-pill ' + bp.cls;
+
+  document.getElementById('gauge-dot').style.left = bp.pos + '%';
+  document.getElementById('r-desc').innerHTML = makeDesc(bp, s, d, age, gender);
+
+  // Advice cards
+  const adv = makeAdvice(bp.lv, salt, exercise, stress, family, alcohol);
+  const sec = document.getElementById('advice-section');
+  sec.innerHTML = '<h2 class="advice-section-title">改善のポイント</h2>';
+
+  adv.forEach(card => {
+    const lis = card.items.map(([tag, txt]) =>
+      `<li>${tag ? `<span class="pri-tag">${tag}</span> ` : ''}${txt}</li>`
+    ).join('');
+    sec.innerHTML += `
+      <div class="adv-card">
+        <div class="adv-head">
+          <span class="ic">${card.ic}</span>
+          <h3>${card.title}</h3>
+        </div>
+        <ul class="adv-list">${lis}</ul>
+      </div>`;
+  });
+
+  go('s-result');
+}
+</script>
+</body>
+</html>
